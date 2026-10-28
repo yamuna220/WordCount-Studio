@@ -1,53 +1,26 @@
-# WordCount Studio — Hadoop MapReduce UI
+# WordCount Studio
 
-A local-only dark dashboard that uploads a `.txt` file to HDFS, runs your existing Java `WordCount` JAR, and displays the resulting frequencies.
+Dark Flask dashboard for submitting `.txt` files to a separately hosted Hadoop 3.2.3 backend and displaying actual MapReduce word counts.
 
-## Preserves your current project
+## Architecture
+- Render runs the web dashboard (`app.py`) and forwards API requests to `WORDCOUNT_API_URL` using the bearer token in `WORDCOUNT_API_TOKEN`.
+- `backend/app.py` runs on the Ubuntu host alongside Hadoop. It accepts only authenticated status and WordCount requests, limits uploads to 5 MB, invokes fixed Hadoop commands without a shell, and preserves the existing JAR.
+- A Cloudflare Tunnel can expose the local API over HTTPS without opening Hadoop ports on the router. Keep the API bound to `127.0.0.1`.
 
-Expected existing paths:
-- Hadoop: `~/hadoop-3.2.3`
-- Java: `/usr/lib/jvm/java-17-openjdk-amd64`
-- Existing JAR: `~/WordCount/wordcount.jar`
+## Render configuration
+Build command: `pip install -r requirements.txt`
+Start command: `gunicorn --bind 0.0.0.0:$PORT app:app`
+Environment variables (set in Render dashboard, never commit secrets):
+- `WORDCOUNT_API_URL`: HTTPS tunnel URL, without a trailing slash
+- `WORDCOUNT_API_TOKEN`: same long random token configured on the Ubuntu backend
 
-This project does not edit `WordCount.java`, rebuild your JAR, reformat HDFS, or delete your existing HDFS files. Each UI run uses a unique path under `/user/$USER/wordcount_web/runs/`.
+## Ubuntu backend
+Install backend dependency with `python3 -m pip install --user -r backend/requirements.txt` (or use a virtual environment). Set `WORDCOUNT_API_TOKEN` to a randomly generated secret of at least 32 characters, then run `python3 backend/app.py`. The API listens only on `127.0.0.1:8000`.
 
-## Run it (Ubuntu)
-
-1. Extract `WordCountWeb.zip` into your home folder so you have `~/WordCountWeb/setup.sh`.
-2. Open a terminal and run:
-
-   ```bash
-   cd ~/WordCountWeb
-   bash setup.sh
-   ```
-
-3. Open Firefox or Chrome on the same Ubuntu machine and visit:
-
-   `http://127.0.0.1:5000`
-
-4. Upload a `.txt` file and click **Run MapReduce job**.
-5. Leave the terminal running while using the UI. Press `Ctrl+C` in that terminal to stop the web server.
-
-The setup script creates a Python virtual environment and installs Flask. It does not install or modify Hadoop.
-
-## Hadoop prerequisites
-
-For the UI to complete a real cluster job:
-- HDFS must be running.
-- ResourceManager and NodeManager must be running.
-- `mapreduce.framework.name` must be `yarn` in `mapred-site.xml`.
-- The existing JAR must accept the standard arguments `WordCount <input-path> <output-path>`.
-- Java module-opening options needed by your Hadoop 3.2.3 + Java 17 setup should remain in the Hadoop configuration you already adjusted.
-
-If the job fails, read the **Execution logs** section in the UI. The full backend error is also printed in the terminal running `setup.sh`.
+Set `JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64`, `HADOOP_HOME=$HOME/hadoop-3.2.3`, and `WORDCOUNT_JAR=$HOME/WordCount/wordcount.jar` if your paths differ. Keep HDFS/YARN running. Do not expose ports 9000, 9870, or 8088 publicly.
 
 ## Security
-
-The Flask server binds only to `127.0.0.1`, not to your network. Do not change it to `0.0.0.0` or expose it publicly: the backend can launch Hadoop commands. File uploads are limited to 5 MB and only `.txt` files are accepted.
-
-## Notes
-
-- The dashboard reports total tokens as the sum of emitted word counts and unique words as the number of output rows.
-- Runtime is the browser-observed duration for the request.
-- CSV export downloads the displayed word/count data.
-- Job output directories are intentionally retained in HDFS for inspection and are not automatically deleted.
+- Never commit API tokens.
+- Do not bind the backend to `0.0.0.0` or forward Hadoop ports.
+- Keep the tunnel and backend running only while you need remote access. A Cloudflare Quick Tunnel URL changes when restarted; update Render's `WORDCOUNT_API_URL` after it changes. For a persistent URL, configure a named tunnel with a domain in Cloudflare.
+- A public site can trigger real Hadoop jobs. Only share it with trusted users and rotate the token if exposed.
