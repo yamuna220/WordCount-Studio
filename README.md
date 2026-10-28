@@ -1,7 +1,8 @@
 # WordCount Studio
 
-Dark Flask dashboard for submitting `.txt` files to a separately hosted Hadoop 3.2.3 backend and displaying actual MapReduce word counts.
+**Live Demo:** [https://wordcount-studio.onrender.com/](https://wordcount-studio.onrender.com/)
 
+A dark Flask dashboard for submitting `.txt` files to a Hadoop 3.2.3 backend and displaying actual MapReduce word counts.
 ## Architecture
 - Render runs the web dashboard (`app.py`) and forwards API requests to `WORDCOUNT_API_URL` using the bearer token in `WORDCOUNT_API_TOKEN`.
 - `backend/app.py` runs on the Ubuntu host alongside Hadoop. It accepts only authenticated status and WordCount requests, limits uploads to 5 MB, invokes fixed Hadoop commands without a shell, and preserves the existing JAR.
