@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>WordCount Studio | Hadoop MapReduce</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand"><div class="brand-mark">W</div><div><strong>WordCount</strong><span>STUDIO</span></div></div>
+      <div class="nav-label">WORKSPACE</div>
+      <button class="nav-item active" type="button" data-target="overview" aria-current="page"><span class="nav-icon">▦</span><span>Overview</span></button>
+      <button class="nav-item" type="button" data-target="run-job"><span class="nav-icon">⇄</span><span>MapReduce Jobs</span><span class="side-pill">RUN</span></button>
+      <button class="nav-item" type="button" data-target="results"><span class="nav-icon">▤</span><span>Input & Results</span></button>
+      <button class="nav-item" type="button" data-target="logs"><span class="nav-icon">⌁</span><span>Execution Logs</span></button>
+      <div class="sidebar-bottom">
+        <div class="cluster-card"><div class="cluster-head"><span class="pulse" id="cluster-pulse"></span> Local cluster</div><p>Hadoop environment</p><small id="cluster-state">Checking connection…</small></div>
+        <div class="user-row"><div class="avatar">IO</div><div><strong>Ubuntu Workspace</strong><span>Local environment</span></div></div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar"><div class="topbar-left"><button type="button" class="mobile-menu" id="mobile-menu" aria-label="Toggle navigation" aria-expanded="false">☰</button><div class="breadcrumb">Workspace <span>/</span> <strong id="breadcrumb-current">Overview</strong></div></div><div class="top-right"><span class="secure-dot"></span> Local session <div class="top-avatar">IO</div></div></header>
+      <section class="welcome" id="overview">
+        <div><div class="eyebrow"><span class="eyebrow-dot"></span> DISTRIBUTED DATA PROCESSING</div><h1>WordCount <span>Studio.</span></h1><p>Run your Java MapReduce job on Hadoop and explore word frequencies in one place.</p></div>
+        <div class="status-chip" id="job-status"><span class="status-dot"></span> Ready to run</div>
+      </section>
+
+      <section class="stats-grid">
+        <div class="stat-card"><div class="stat-top"><span>Total words</span><span class="stat-icon purple">Aa</span></div><div class="stat-value" id="total-words">—</div><div class="stat-foot">Tokens counted in input</div></div>
+        <div class="stat-card"><div class="stat-top"><span>Unique words</span><span class="stat-icon blue">◇</span></div><div class="stat-value" id="unique-words">—</div><div class="stat-foot">Distinct output keys</div></div>
+        <div class="stat-card"><div class="stat-top"><span>Job runtime</span><span class="stat-icon green">◷</span></div><div class="stat-value" id="runtime">—</div><div class="stat-foot">This browser session</div></div>
+        <div class="stat-card"><div class="stat-top"><span>Engine</span><span class="stat-icon orange">⌘</span></div><div class="stat-value engine">Hadoop</div><div class="stat-foot">Java · MapReduce · HDFS</div></div>
+      </section>
+
+      <section class="content-grid" id="run-job">
+        <div class="panel upload-panel">
+          <div class="panel-heading"><div><div class="section-kicker">01 / INPUT</div><h2>Run a new job</h2></div><span class="step-number">01</span></div>
+          <p class="muted">Choose a plain-text file. The backend uploads it to HDFS and executes your existing <code>wordcount.jar</code>.</p>
+          <form id="upload-form">
+            <label class="drop-zone" id="drop-zone" for="file-input">
+              <div class="upload-symbol">↑</div><strong id="file-label">Drop your .txt file here</strong><span>or click to browse · Maximum 5 MB</span>
+              <input id="file-input" name="file" type="file" accept=".txt,text/plain" required>
+            </label>
+            <div class="file-meta" id="file-meta" hidden><span class="file-type">TXT</span><div><strong id="picked-name"></strong><small id="picked-size"></small></div><button type="button" class="text-button" id="remove-file">Remove</button></div>
+            <button class="run-button" id="run-button" type="submit"><span class="play">▶</span><span id="button-label">Run MapReduce job</span><span class="button-arrow">↗</span></button>
+          </form>
+          <div class="safe-note"><span>ⓘ</span> Runs locally on this Ubuntu machine. Your file is processed by Hadoop, not by browser-side word counting.</div>
+        </div>
+
+        <div class="panel pipeline-panel">
+          <div class="panel-heading"><div><div class="section-kicker">02 / PIPELINE</div><h2>Execution flow</h2></div><span class="live-label"><span class="pulse"></span> WORKFLOW</span></div>
+          <div class="pipeline">
+            <div class="pipeline-step"><div class="pipe-icon input-icon">▤</div><div class="pipe-copy"><strong>Input file</strong><span>Plain text uploaded</span></div><span class="pipe-state" id="pipe-input">Waiting</span></div>
+            <div class="pipe-line"></div>
+            <div class="pipeline-step"><div class="pipe-icon map-icon">⌘</div><div class="pipe-copy"><strong>Mapper</strong><span>Emit (word, 1) pairs</span></div><span class="pipe-state" id="pipe-map">Waiting</span></div>
+            <div class="pipe-line"></div>
+            <div class="pipeline-step"><div class="pipe-icon reduce-icon">Σ</div><div class="pipe-copy"><strong>Reducer</strong><span>Aggregate each word</span></div><span class="pipe-state" id="pipe-reduce">Waiting</span></div>
+            <div class="pipe-line"></div>
+            <div class="pipeline-step"><div class="pipe-icon output-icon">✓</div><div class="pipe-copy"><strong>Output in HDFS</strong><span>part-r-00000</span></div><span class="pipe-state" id="pipe-output">Waiting</span></div>
+          </div>
+          <div class="pipeline-footer"><span>Execution target</span><strong>HDFS + YARN</strong></div>
+        </div>
+      </section>
+
+      <section class="panel results-panel" id="results">
+        <div class="panel-heading results-heading"><div><div class="section-kicker">03 / OUTPUT</div><h2>Word frequency results</h2><p class="muted">Results appear here after a successful MapReduce job.</p></div><button class="export-button" id="export-button" disabled>↓ Export CSV</button></div>
+        <div class="table-toolbar"><div class="table-title">RESULT SET <span id="row-count">0 rows</span></div><input type="search" id="search-input" placeholder="Search words…" aria-label="Search words"></div>
+        <div class="table-wrap"><table><thead><tr><th>RANK</th><th>WORD</th><th>FREQUENCY</th><th>DISTRIBUTION</th></tr></thead><tbody id="results-body"><tr class="empty-row"><td colspan="4"><div class="empty-state"><div class="empty-icon">⌕</div><strong>No results yet</strong><span>Upload a text file and run your first job.</span></div></td></tr></tbody></table></div>
+        <div class="results-footer"><span id="hdfs-path">Output location: waiting for first run</span><span id="result-summary">Ready when you are</span></div>
+      </section>
+
+      <section class="panel logs-panel" id="logs"><div class="panel-heading"><div><div class="section-kicker">04 / OBSERVABILITY</div><h2>Execution logs</h2></div><button class="clear-button" id="clear-logs">Clear view</button></div><div class="log-console" id="log-console"><div class="log-line dim">WordCount Studio initialized.</div><div class="log-line dim">Select a .txt file to submit a Hadoop job.</div></div></section>
+      <footer>WORDCOUNT STUDIO <span>·</span> Local Hadoop MapReduce interface</footer>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
